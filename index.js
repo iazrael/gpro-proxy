@@ -12,7 +12,7 @@ app.use(async (req, res) => {
     // 解析请求的URL
     const targetUrl = new URL(req.url, `http://${req.headers.host}`);
     targetUrl.host = targetHost;
-
+    console.log('get request for', req.url)
     // 构建目标服务器的请求选项
     const options = {
         hostname: targetUrl.hostname,
