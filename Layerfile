@@ -1,0 +1,23 @@
+FROM vm/ubuntu:18.04
+# To note: Layerfiles create VMs, *not* containers!
+
+# Install node
+RUN curl -sL https://deb.nodesource.com/setup_16.x | bash && \
+    apt install nodejs -y && \
+    rm -f /etc/apt/sources.list.d/nodesource.list
+
+RUN npm install -g pnpm
+
+# 设置工作目录
+WORKDIR /app
+
+# 拷贝应用程序代码到工作目录
+COPY . .
+
+# 安装依赖
+RUN pnpm install
+
+
+
+RUN BACKGROUND pnpm start
+EXPOSE WEBSITE http://localhost:3000
