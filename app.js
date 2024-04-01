@@ -9,6 +9,10 @@ app.use(cors());
 
 const proxyDomain = 'generativelanguage.googleapis.com'
 
+app.get('/', (req, res) => {
+    res.send('Hello World!')
+})
+
 // 代理服务器
 app.use('/', createProxyMiddleware({
     target: `https://${proxyDomain}`,
@@ -31,8 +35,10 @@ app.use('/', createProxyMiddleware({
     }
 }));
 
-// 启动服务器
-const port = 3000;
-app.listen(port, () => {
-    console.log(`Proxy server is running on port ${port}`);
-});
+// // 启动服务器
+// const port = 3000;
+// app.listen(port, () => {
+//     console.log(`Proxy server is running on port ${port}`);
+// });
+
+module.exports = app
