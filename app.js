@@ -16,7 +16,7 @@ const app = express()
 
 
 
-app.use('*', createProxyMiddleware({
+app.use(createProxyMiddleware({
     target: `https://${config.PROXY_TARGET_DOMAIN}`,
     changeOrigin: true,
     secure: false,
