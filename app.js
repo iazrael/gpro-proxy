@@ -1,59 +1,50 @@
-const express = require('express');
-const { createProxyMiddleware } = require('http-proxy-middleware');
-const cors = require('cors');
+const express = require('express')
+const {
+    createProxyMiddleware
+} = require('http-proxy-middleware');
+const app = express()
 
-const app = express();
-
-// 跨域配置
-app.use(cors());
+// const HttpsProxyAgent = require('https-proxy-agent');
 
 const proxyDomain = 'generativelanguage.googleapis.com'
 
 app.get('/', (req, res) => {
-    res.send('Hello World!')
+    res.send('Hello Kitty!')
 })
 
+// // 代理服务器的地址
+// const proxyHost = '127.0.0.1';
+// const proxyPort = 7890;
+// // 设置代理
+// const proxyUrl = `http://${proxyHost}:${proxyPort}`;
+// const agent = new HttpsProxyAgent(proxyUrl);
 
-app.use(async (req, res, next) => {
-    
-    // 部分代理工具，请求由浏览器发起，跨域请求时会先发送一个 preflight 进行检查，也就是 OPTIONS 请求
-    // 需要响应该请求，否则后续的 POST 会失败
-    const corsHeaders = {
-        'Access-Control-Allow-Origin': '*',
-        'Access-Control-Allow-Methods': 'OPTIONS',
-        'Access-Control-Allow-Headers': '*',
-    };
-
-    if (req.method === 'OPTIONS') {
-        res.setHeader(...corsHeaders)
-        res.end()
-        return
+app.use('/', createProxyMiddleware({
+    target: `https://${proxyDomain}`,
+    changeOrigin: true,
+    secure: false,
+    // agent: agent,
+    onProxyReq: (proxyReq, req, res) => {
+        console.log(`proxy for ${req.url}`)
+        // 移除 'x-forwarded-for' 和 'x-real-ip' 头，以确保不传递原始客户端 IP 地址等信息
+        // proxyReq.headers['x-forwarded-for'] = '';
+        // proxyReq.headers['x-real-ip'] = '';
+    },
+    onProxyRes: (proxyRes, req, res) => {
+        console.log(`proxy from ${req.url} back`)
+        proxyRes.headers['Access-Control-Allow-Origin'] = '*';
+        proxyRes.headers['Access-Control-Allow-Methods'] = 'GET, POST, OPTIONS, PUT, PATCH, DELETE';
+        proxyRes.headers['Access-Control-Allow-Headers'] = 'X-Requested-With,content-type';
+        proxyRes.headers['Access-Control-Allow-Credentials'] = true;
+    },
+    onError: (err, req, res, target) => {
+        console.log(`proxy get error for ${req.url} with target ${target}`)
+        res.writeHead(500, {
+            'Content-Type': 'text/plain',
+        });
+        res.end(`Something went wrong with ${target}`);
     }
-    const url = new URL(`https://${proxyDomain}${req.originalUrl}`);
-    const response = await fetch(new Request(url, req));
-    console.log(response)
-})
-// 代理服务器
-// app.use('/', createProxyMiddleware({
-//     target: `https://${proxyDomain}`,
-//     changeOrigin: true,
-//     secure: false, // 如果目标服务器是 https，需要设置为 false
-//     xfwd: true,
-//     pathRewrite: (path, req) => {
-//         // 修改路径，去掉原始请求的域名部分
-//         return path;
-//     },
-//     onProxyReq: (proxyReq, req, res) => {
-//         // 修改请求头中的 Host 字段
-//     },
-//     onProxyRes: (proxyRes, req, res) => {
-//         // 添加一些响应头以确保跨域
-//         res.setHeader('Access-Control-Allow-Origin', '*');
-//         res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS, PUT, PATCH, DELETE');
-//         res.setHeader('Access-Control-Allow-Headers', 'X-Requested-With,content-type');
-//         res.setHeader('Access-Control-Allow-Credentials', true);
-//     }
-// }));
+}));
 
 
 module.exports = app
