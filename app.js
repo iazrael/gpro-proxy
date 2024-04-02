@@ -10,6 +10,7 @@ const app = express()
 
 
 app.get('/', (req, res) => {
+    console.info('Hello')
     res.send('Hello Kitty!')
 })
 
@@ -21,13 +22,13 @@ app.use('/', createProxyMiddleware({
     secure: false,
     agent: config.LOCAL_PROXY_AGENT,
     onProxyReq: (proxyReq, req, res) => {
-        console.log(`[*] proxy for ${req.url}`)
+        console.info(`[*] proxy for ${req.url}`)
         // 移除 'x-forwarded-for' 和 'x-real-ip' 头，以确保不传递原始客户端 IP 地址等信息
         // proxyReq.headers['x-forwarded-for'] = '';
         // proxyReq.headers['x-real-ip'] = '';
     },
     onProxyRes: (proxyRes, req, res) => {
-        console.log(`[*] proxy from ${req.url} back`)
+        console.info(`[*] proxy from ${req.url} back`)
         proxyRes.headers['Access-Control-Allow-Origin'] = '*';
         proxyRes.headers['Access-Control-Allow-Methods'] = 'GET, POST, OPTIONS, PUT, PATCH, DELETE';
         proxyRes.headers['Access-Control-Allow-Headers'] = 'X-Requested-With,content-type';
