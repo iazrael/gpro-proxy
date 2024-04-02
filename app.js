@@ -1,47 +1,39 @@
-const express = require('express')
-const {
-    createProxyMiddleware
-} = require('http-proxy-middleware');
-
-const config = require('./config')
-
-const app = express()
+const express = require('express');
+const axios = require('axios');
+const bodyParser = require('body-parser');
+const CONFIG = require('./config')
 
 
+const app = express();
 
-// app.get('/', (req, res) => {
-//     console.info('Hello')
-//     res.send('Hello Kitty!')
-// })
+// 解析 application/json 格式的请求体
+app.use(bodyParser.json());
 
+// 处理所有请求
+app.use((req, res, next) => {
+    // 构造新的请求配置
+    const config = {
+        method: req.method.toLowerCase(),
+        maxBodyLength: Infinity,
+        url: `https://${CONFIG.PROXY_TARGET_DOMAIN}` + req.originalUrl,
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        // 如果有请求体，则传递请求体
+        data: req.body ? JSON.stringify(req.body) : undefined
+    };
 
-
-app.use(createProxyMiddleware({
-    target: `https://${config.PROXY_TARGET_DOMAIN}`,
-    changeOrigin: true,
-    secure: false,
-    agent: config.LOCAL_PROXY_AGENT,
-    onProxyReq: (proxyReq, req, res) => {
-        console.info(`[*] proxy for ${req.url}`)
-        // 移除 'x-forwarded-for' 和 'x-real-ip' 头，以确保不传递原始客户端 IP 地址等信息
-        // proxyReq.headers['x-forwarded-for'] = '';
-        // proxyReq.headers['x-real-ip'] = '';
-    },
-    onProxyRes: (proxyRes, req, res) => {
-        console.info(`[*] proxy from ${req.url} back`)
-        proxyRes.headers['Access-Control-Allow-Origin'] = '*';
-        proxyRes.headers['Access-Control-Allow-Methods'] = 'GET, POST, OPTIONS, PUT, PATCH, DELETE';
-        proxyRes.headers['Access-Control-Allow-Headers'] = 'X-Requested-With,content-type';
-        proxyRes.headers['Access-Control-Allow-Credentials'] = true;
-    },
-    onError: (err, req, res, target) => {
-        console.error(`[!] proxy get error for ${req.url} with target ${target}, error: ${err}`)
-        res.writeHead(500, {
-            'Content-Type': 'text/plain',
+    // 发起新请求
+    axios.request(config)
+        .then((response) => {
+            // 将响应返回给客户端
+            res.json(response.data);
+        })
+        .catch((error) => {
+            // 处理错误
+            console.error(error);
+            res.status(500).json({ error: 'Internal Server Error' });
         });
-        res.end(`Something went wrong with ${target}`);
-    }
-}));
-
+});
 
 module.exports = app
