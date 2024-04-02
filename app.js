@@ -10,7 +10,7 @@ const app = express();
 app.use(bodyParser.json());
 
 // 处理所有请求
-app.post('*', (req, res, next) => {
+app.post('/*', (req, res, next) => {
     // 构造新的请求配置
     const config = {
         method: req.method.toLowerCase(),
