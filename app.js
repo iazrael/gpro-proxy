@@ -9,10 +9,10 @@ const app = express()
 
 
 
-app.get('/', (req, res) => {
-    console.info('Hello')
-    res.send('Hello Kitty!')
-})
+// app.get('/', (req, res) => {
+//     console.info('Hello')
+//     res.send('Hello Kitty!')
+// })
 
 
 
